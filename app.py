@@ -1,15 +1,65 @@
-# module and packages should starts with lower case and and a class starts with lower case
-from flask import Flask
+from flask import Flask, jsonify, request, render_template
 
-# this is creating a flask app and __name__ tell the app that is starting here
+
 app = Flask(__name__)
 
+# POST - used to receive data
+# GET - used to send data back only
+stores = [{"name": "MyStore", "items": [{"name": "my item", "price": 15.99}]}]
 
-@app.route(
-    "/"
-)  # the foward slash is always refers to the home page (it's the main endpoint)
+
+@app.route("/")
 def home():
-    return "Hello, world!"
+    return "Hello world"
 
 
-app.run(port=5000)
+# post /store data: {name :}
+@app.route("/store", methods=["POST"])
+def create_store():
+    request_data = request.get_json()
+    new_store = {"name": request_data["name"], "items": []}
+    stores.append(new_store)
+    return jsonify(new_store)
+    # pass
+
+
+# get /store/<name> data: {name :}
+@app.route("/store/<string:name>")
+def get_store(name):
+    for store in stores:
+        if store["name"] == name:
+            return jsonify(store)
+    return jsonify({"message": "store not found"})
+    # pass
+
+
+# get /store
+@app.route("/store")
+def get_stores():
+    return jsonify({"stores": stores})
+    # pass
+
+
+# post /store/<name> data: {name :}
+@app.route("/store/<string:name>/item", methods=["POST"])
+def create_item_in_store(name):
+    request_data = request.get_json()
+    for store in stores:
+        if store["name"] == name:
+            new_item = {"name": request_data["name"], "price": request_data["price"]}
+            store["items"].append(new_item)
+            return jsonify(new_item)
+    return jsonify({"message": "store not found"})
+    # pass
+
+
+# get /store/<name>/item data: {name :}
+@app.route("/store/<string:name>/item")
+def get_item_in_store(name):
+    for store in stores:
+        if store["name"] == name:
+            return jsonify({"items": store["items"]})
+    return jsonify({"message": "store not found"})
+
+
+app.run(port=5000, debug=True)
